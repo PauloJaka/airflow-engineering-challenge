@@ -1,7 +1,7 @@
 x-airflow-common:
   &airflow-common
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.4}
-  # build: .
+  #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.4}
+  build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -20,6 +20,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/local_storage:/opt/airflow/local_storage
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt  # Novo volume para o DBT
+    - ${AIRFLOW_PROJ_DIR:-.}/tests:/opt/airflow/tests  # Novo volume para testes
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -81,12 +83,7 @@ services:
   airflow-webserver:
     container_name: airflow-webserver
     <<: *airflow-common
-    command: >
-      bash -c "
-      pip install dbt-postgres &&
-      pip install airflow-dbt &&
-      pip install storage_tool &&
-      airflow webserver"
+    command: airflow webserver
     ports:
       - "8080:8080"
     healthcheck:
@@ -103,12 +100,7 @@ services:
   airflow-scheduler:
     container_name: airflow-scheduler
     <<: *airflow-common
-    command: >
-      bash -c "
-      pip install dbt-postgres &&
-      pip install airflow-dbt &&
-      pip install storage_tool &&
-      airflow scheduler"
+    command: airflow scheduler
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -123,12 +115,7 @@ services:
   airflow-worker:
     container_name: airflow-worker
     <<: *airflow-common
-    command: >
-      bash -c "
-      pip install dbt-postgres &&
-      pip install airflow-dbt &&
-      pip install storage_tool &&
-      airflow celery worker"
+    command: airflow celery worker
     healthcheck:
       test:
         - "CMD-SHELL"
