@@ -1,0 +1,24 @@
+resources:
+  products:
+    endpoint: "/api/v1/products"
+    file_name: "products"
+    limit: 50
+    table_name: "products"
+    
+  carts:
+    endpoint: "/api/v1/carts"
+    file_name: "carts"
+    limit: 50
+    table_name: "carts"
+    
+  customers:
+    endpoint: "/api/v1/customer"
+    file_name: "customers"
+    limit: 50
+    table_name: "customers"
+    
+  logistics:
+    endpoint: "/api/v1/logistict"
+    file_name: "logistics"
+    limit: 50
+    table_name: "logistics" 
