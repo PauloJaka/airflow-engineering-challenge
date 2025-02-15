@@ -1,14 +1,14 @@
 x-airflow-common:
   &airflow-common
-  #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.4}
-  build: .
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.10.4}
+  # build: .
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://postgres:postgres@postgresdb:5432/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://postgres:postgres@postgresdb:5432/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@airflow-redis:6379/0
-    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__FERNET_KEY: 'e1Wbnl51oYlDsM15-GkjtpZQZdfwggEs_yYCoKeocoM='
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session'
@@ -20,8 +20,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
     - ${AIRFLOW_PROJ_DIR:-.}/local_storage:/opt/airflow/local_storage
-    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt  # Novo volume para o DBT
-    - ${AIRFLOW_PROJ_DIR:-.}/tests:/opt/airflow/tests  # Novo volume para testes
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt
+    - ${AIRFLOW_PROJ_DIR:-.}/tests:/opt/airflow/tests 
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -83,7 +83,15 @@ services:
   airflow-webserver:
     container_name: airflow-webserver
     <<: *airflow-common
-    command: airflow webserver
+    command: >
+      bash -c "
+      pip install --upgrade pip &&
+      pip install 'dbt-core==1.5.9' &&
+      pip install 'dbt-postgres==1.5.9' &&
+      pip install airflow-dbt &&
+      pip install storage_tool &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      airflow webserver"
     ports:
       - "8080:8080"
     healthcheck:
@@ -100,7 +108,15 @@ services:
   airflow-scheduler:
     container_name: airflow-scheduler
     <<: *airflow-common
-    command: airflow scheduler
+    command: >
+      bash -c "
+      pip install --upgrade pip &&
+      pip install 'dbt-core==1.5.9' &&
+      pip install 'dbt-postgres==1.5.9' &&
+      pip install airflow-dbt &&
+      pip install storage_tool &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      airflow scheduler"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -115,7 +131,15 @@ services:
   airflow-worker:
     container_name: airflow-worker
     <<: *airflow-common
-    command: airflow celery worker
+    command: >
+      bash -c "
+      pip install --upgrade pip &&
+      pip install 'dbt-core==1.5.9' &&
+      pip install 'dbt-postgres==1.5.9' &&
+      pip install airflow-dbt &&
+      pip install storage_tool &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      airflow celery worker"
     healthcheck:
       test:
         - "CMD-SHELL"
@@ -142,6 +166,26 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    restart: always
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
+  dbt-docs:
+    container_name: dbt-docs
+    <<: *airflow-common
+    command: >
+      bash -c "
+      pip install --upgrade pip &&
+      pip install 'dbt-core==1.5.9' &&
+      pip install 'dbt-postgres==1.5.9' &&
+      cd /opt/airflow/dbt &&
+      dbt deps &&
+      dbt docs generate &&
+      dbt docs serve --port 8085"
+    ports:
+      - "8085:8085"
     restart: always
     depends_on:
       <<: *airflow-common-depends-on
