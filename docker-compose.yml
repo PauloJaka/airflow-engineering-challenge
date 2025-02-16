@@ -90,7 +90,7 @@ services:
       pip install 'dbt-postgres==1.5.9' &&
       pip install airflow-dbt &&
       pip install storage_tool &&
-      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-mock &&
       airflow webserver"
     ports:
       - "8080:8080"
@@ -115,7 +115,7 @@ services:
       pip install 'dbt-postgres==1.5.9' &&
       pip install airflow-dbt &&
       pip install storage_tool &&
-      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-mock &&
       airflow scheduler"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
@@ -138,7 +138,7 @@ services:
       pip install 'dbt-postgres==1.5.9' &&
       pip install airflow-dbt &&
       pip install storage_tool &&
-      pip install tenacity astronomer-cosmos ruff requests pytest pytest-docker &&
+      pip install tenacity astronomer-cosmos ruff requests pytest pytest-mock &&
       airflow celery worker"
     healthcheck:
       test:
