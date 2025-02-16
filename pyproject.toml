@@ -1,0 +1,26 @@
+[tool.ruff]
+# Mesmas regras do Black
+line-length = 88
+indent-width = 4
+
+# Regras de linting
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "RUF", # ruff-specific rules
+]
+
+# Formatação de código
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# Configurações para ordenação de imports
+[tool.ruff.isort]
+combine-as-imports = true
